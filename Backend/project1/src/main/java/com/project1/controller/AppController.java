@@ -29,13 +29,29 @@ public class AppController {
     //registers a new user if the account info does not already exist and the username and password
     //are the appropriate length
     @PostMapping("/register")
-    public ResponseEntity<Account> register(@RequestBody Account account) {
+    public ResponseEntity<?> register(@RequestBody Account account) {
         if(accountService.findByUsername(account.getEmail()) != null) {
             return ResponseEntity.status(409).build();
         }
-        if (account.getEmail() == "" || account.getPassword().length()<4) {
-            return ResponseEntity.status(400).build();
+        if (account.getEmail().length() < 1){
+            return ResponseEntity.status(400).body("Email cant be empty");
         }
+        if (account.getPassword().length() < 8) {
+            return ResponseEntity.status(400).body("Password must be at least 8 characters long");
+        }
+        if (!account.getPassword().matches(".*[a-z].*")) {
+            return ResponseEntity.status(400).body("Password must contain at least one lowercase letter");
+        }
+        if (!account.getPassword().matches(".*[A-Z].*")) {
+            return ResponseEntity.status(400).body("Password must contain at least one uppercase letter");
+        }
+        if (!account.getPassword().matches(".*\\d.*")) {
+            return ResponseEntity.status(400).body("Password must contain at least one number");
+        }
+        if (!account.getPassword().matches(".*[@$!%*?&].*")) {
+            return ResponseEntity.status(400).body("Password must contain at least one special character (@$!%*?&)");
+        }
+        
         System.out.println("Register called: " + account.getEmail());
 
         accountService.registerNewUser(account);
@@ -75,15 +91,6 @@ public class AppController {
         return ResponseEntity.ok("Login successful");
     }
 
-    /*@GetMapping("/session-check")
-    public ResponseEntity<String> checkSession(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null && request.getUserPrincipal() != null) {
-            return ResponseEntity.ok("User is logged in: " + request.getUserPrincipal().getName());
-        } else {
-            return ResponseEntity.status(401).body("User is not logged in.");
-        }
-    }*/
 
     @GetMapping("/profile")
     public ResponseEntity<String> profile(HttpServletRequest request) {
