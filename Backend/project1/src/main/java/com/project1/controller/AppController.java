@@ -76,23 +76,23 @@ public class AppController {
     @GetMapping("/profile")
     public ResponseEntity<String> profile(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        Account user = (Account) session.getAttribute("user");
+        //Account user = (Account) session.getAttribute("user");
         if (session == null || session.getAttribute("user") == null) {
             return ResponseEntity.status(403).body("Access denied: User not logged in.");
         }
-        //Account user = (Account) session.getAttribute("user");
+        Account user = (Account) session.getAttribute("user");
         return ResponseEntity.ok("User profile: " + user.getEmail());
     }
 
-    @PostMapping("/logout")
+    /*@PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();  // Invalidate the session
-            return ResponseEntity.status(402).build();
+            return ResponseEntity.ok("Logged out successfully.");
         }
-        return ResponseEntity.ok("Logged out successfully.");
-    }
+        return ResponseEntity.ok("No active session to log out.");
+    }*/
 
 
 }
