@@ -28,6 +28,7 @@ public class AccountService {
         String rawPassword = account.getPassword();
         String encodedPassword = passwordEncoder.encode(rawPassword);
         account.setPassword(encodedPassword);
+        account.setRole("USER");
         accountRepository.save(account);
     }
 

@@ -12,6 +12,8 @@ public class Account {
     private Integer id;
     private String email;
     private String password;
+
+    private String role;
    
     public Account(){
 
@@ -27,6 +29,8 @@ public class Account {
         this.email = email;
         this.password = password;
     }
+
+
     
     public Integer getAccountId() {
         return id;
@@ -50,5 +54,12 @@ public class Account {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+    public void setRole(String role) {
+        this.role = role;
     }
 }

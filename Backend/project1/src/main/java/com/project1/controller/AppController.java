@@ -1,5 +1,6 @@
 package com.project1.controller;
 
+import com.project1.entity.AccountDTO;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -60,7 +61,7 @@ public class AppController {
 
     }
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Account account, HttpServletRequest request) {
+    public ResponseEntity<?> login(@RequestBody Account account, HttpServletRequest request) {
         Account found = accountService.login(account.getEmail(), account.getPassword());
         if (found == null) {
             return ResponseEntity.status(401).body("Invalid credentials");
@@ -69,7 +70,10 @@ public class AppController {
         HttpSession session = request.getSession(true); // Creates a new session if none exists
         session.setAttribute("user", found);
 
-        return ResponseEntity.ok("Login successful");
+        //return ResponseEntity.ok("Login successful");
+        AccountDTO a = new AccountDTO(found.getAccountId(), found.getEmail(), found.getRole());
+        //return ResponseEntity.status(200).body(accountService.findByUsername(account.getEmail()));
+        return ResponseEntity.status(200).body(a);
     }
 
 
