@@ -52,31 +52,13 @@ public class AppController {
             return ResponseEntity.status(400).body("Password must contain at least one special character (@$!%*?&)");
         }
         
-        System.out.println("Register called: " + account.getEmail());
+        System.out.println("Register account: " + account.getEmail());
 
         accountService.registerNewUser(account);
         return ResponseEntity.status(200)
             .body(accountService.findByUsername(account.getEmail()));
 
     }
-
-    //@param: account object of the account that is trying to login
-    //"logs in" the account if the username and password combination are valid
-    /*@PostMapping("/login")
-    public ResponseEntity<Account> login (@RequestBody Account account) {
-        Account found = accountService.login(account.getEmail(), account.getPassword());
-        System.out.println("Login attempt: " + account.getEmail() + ", " + account.getPassword());
-        System.out.println("Found account: " + found);
-
-        if (found == null) {
-            System.out.println("NULL");
-            return ResponseEntity.status(401).build();
-        } else {
-            System.out.println("NOT NULL");
-            return ResponseEntity.status(200).body(found);
-        }
-    }*/
-
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody Account account, HttpServletRequest request) {
         Account found = accountService.login(account.getEmail(), account.getPassword());
@@ -84,7 +66,6 @@ public class AppController {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
 
-        // Ensure session creation
         HttpSession session = request.getSession(true); // Creates a new session if none exists
         session.setAttribute("user", found);
 
@@ -108,6 +89,7 @@ public class AppController {
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();  // Invalidate the session
+            return ResponseEntity.status(402).build();
         }
         return ResponseEntity.ok("Logged out successfully.");
     }

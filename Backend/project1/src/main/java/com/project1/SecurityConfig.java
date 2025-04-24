@@ -32,9 +32,9 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/profile")
                         ).permitAll()
                         .anyRequest().authenticated()
-                )
-                .httpBasic(AbstractHttpConfigurer::disable) // disable HTTP Basic Auth
-                .formLogin(AbstractHttpConfigurer::disable);          // disable Spring's login form
+                );
+                //.httpBasic(AbstractHttpConfigurer::disable) // disable HTTP Basic Auth
+                //.formLogin(AbstractHttpConfigurer::disable);          // disable Spring's login form
 
         return http.build();
     }
