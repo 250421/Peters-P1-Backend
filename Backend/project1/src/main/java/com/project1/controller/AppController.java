@@ -1,5 +1,6 @@
 package com.project1.controller;
 
+import com.project1.ErrorResponse;
 import com.project1.entity.AccountDTO;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,18 +8,21 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.project1.entity.Account;
 import com.project1.service.AccountService;
 
-@RestController
-public class AppController {
+import java.util.HashMap;
+import java.util.Map;
 
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+
+public class AppController {
     private AccountService accountService;
 
     @Autowired
@@ -26,66 +30,104 @@ public class AppController {
         this.accountService = accountService;
     }
 
-    //@param: An account object of an account that needs to be registered
-    //registers a new user if the account info does not already exist and the username and password
-    //are the appropriate length
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Account account) {
-        if(accountService.findByUsername(account.getEmail()) != null) {
-            return ResponseEntity.status(409).build();
+    @PostMapping("/sign-up")
+    public ResponseEntity<?> register(@RequestBody Account account, HttpServletRequest request) {
+        // Check if the user is already logged in
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("user") != null) {
+            ErrorResponse e = new ErrorResponse("You are already logged in.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e);
         }
-        if (account.getEmail().length() < 1){
-            return ResponseEntity.status(400).body("Email cant be empty");
+
+        // Check if the account already exists
+        if (accountService.findByUsername(account.getEmail()) != null) {
+            ErrorResponse e = new ErrorResponse("Email already exists");
+            return ResponseEntity.status(409).body(e);
+        }
+
+        // Validate account fields
+        if (account.getEmail().length() < 1) {
+            ErrorResponse e = new ErrorResponse("Email can't be empty");
+            return ResponseEntity.status(400).body(e);
+        }
+        if (!account.getEmail().matches(".*[@].*")) {
+            ErrorResponse e = new ErrorResponse("Invalid Email");
+            return ResponseEntity.status(400).body(e);
         }
         if (account.getPassword().length() < 8) {
-            return ResponseEntity.status(400).body("Password must be at least 8 characters long");
+            ErrorResponse e = new ErrorResponse("Password must be at least 8 characters long");
+            return ResponseEntity.status(400).body(e);
         }
         if (!account.getPassword().matches(".*[a-z].*")) {
-            return ResponseEntity.status(400).body("Password must contain at least one lowercase letter");
+            ErrorResponse e = new ErrorResponse("Password must contain at least one lowercase letter\"");
+            return ResponseEntity.status(400).body(e);
         }
         if (!account.getPassword().matches(".*[A-Z].*")) {
-            return ResponseEntity.status(400).body("Password must contain at least one uppercase letter");
+            ErrorResponse e = new ErrorResponse("Password must contain at least one uppercase letter");
+            return ResponseEntity.status(400).body(e);
         }
         if (!account.getPassword().matches(".*\\d.*")) {
-            return ResponseEntity.status(400).body("Password must contain at least one number");
+            ErrorResponse e = new ErrorResponse("Password must contain at least one number");
+            return ResponseEntity.status(400).body(e);
         }
         if (!account.getPassword().matches(".*[@$!%*?&].*")) {
-            return ResponseEntity.status(400).body("Password must contain at least one special character (@$!%*?&)");
+            ErrorResponse e = new ErrorResponse("Password must contain at least one special character (@$!%*?&)");
+            return ResponseEntity.status(400).body(e);
         }
-        
-        System.out.println("Register account: " + account.getEmail());
 
+        // Register the new user
         accountService.registerNewUser(account);
-        return ResponseEntity.status(200)
-            .body(accountService.findByUsername(account.getEmail()));
-
+        AccountDTO accountDTO = new AccountDTO(account.getId(), account.getEmail(), account.getRole());
+        // Return success response
+        return ResponseEntity.status(201)
+                .body(accountDTO);
     }
-    @PostMapping("/login")
+
+    @PostMapping("/sign-in")
     public ResponseEntity<?> login(@RequestBody Account account, HttpServletRequest request) {
+        // Check if the user is already logged in
+        HttpSession session = request.getSession(false); // false = don't create a new session if none exists
+        if (session != null && session.getAttribute("user") != null) {
+            ErrorResponse e = new ErrorResponse("You are already logged in.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e);
+        }
+
+        // Attempt login
         Account found = accountService.login(account.getEmail(), account.getPassword());
         if (found == null) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            ErrorResponse e = new ErrorResponse("Invalid credentials.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e);
         }
 
-        HttpSession session = request.getSession(true); // Creates a new session if none exists
-        session.setAttribute("user", found);
+        // Create a session and store user information
+        session = request.getSession(true); // Create a new session if none exists
+        AccountDTO dto = new AccountDTO(found.getId(), found.getEmail(), found.getRole());
+        session.setAttribute("user", dto);
 
-        //return ResponseEntity.ok("Login successful");
-        AccountDTO a = new AccountDTO(found.getAccountId(), found.getEmail(), found.getRole());
-        //return ResponseEntity.status(200).body(accountService.findByUsername(account.getEmail()));
-        return ResponseEntity.status(200).body(a);
+        // Return success response with user information
+        //AccountDTO accountDTO = new AccountDTO(found.getAccountId(), found.getEmail(), found.getRole());
+        return ResponseEntity.status(HttpStatus.OK).body(dto);
     }
 
-
-    @GetMapping("/profile")
-    public ResponseEntity<String> profile(HttpServletRequest request) {
+   // @GetMapping("/profile")
+    @GetMapping("")
+    public ResponseEntity<?> profile(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        //Account user = (Account) session.getAttribute("user");
-        if (session == null || session.getAttribute("user") == null) {
-            return ResponseEntity.status(403).body("Access denied: User not logged in.");
+        if (session == null) {
+            System.out.println("Session is null");
+            ErrorResponse e = new ErrorResponse("Access denied: User not logged in.");
+            return ResponseEntity.status(401).body(e);
         }
-        Account user = (Account) session.getAttribute("user");
-        return ResponseEntity.ok("User profile: " + user.getEmail());
+
+        Object user = session.getAttribute("user");
+        if (user == null) {
+            System.out.println("User session attribute is null");
+            ErrorResponse e = new ErrorResponse("Access denied: User not logged in.");
+            return ResponseEntity.status(401).body(e);
+        }
+
+        AccountDTO accountDTO = (AccountDTO) user;
+        return ResponseEntity.ok(accountDTO);
     }
 
     /*@PostMapping("/logout")

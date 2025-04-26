@@ -32,7 +32,7 @@ public class Account {
 
 
     
-    public Integer getAccountId() {
+    public Integer getId() {
         return id;
     }
    
