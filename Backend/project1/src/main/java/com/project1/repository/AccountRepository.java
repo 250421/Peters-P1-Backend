@@ -9,7 +9,7 @@ import com.project1.entity.Account;
 public interface AccountRepository extends JpaRepository<Account, Integer>{
 
     Account findByEmailAndPassword(String email, String password);
-    Account findByEmail(String email);
+    Account findByEmailIgnoreCase(String email);
     Account findByPassword(String password);
     Account findById(int id);
 }

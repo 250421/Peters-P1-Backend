@@ -34,7 +34,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/logout", "/api/auth/profile", "/api/auth").permitAll()
+                        .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/logout",
+                                "/api/auth/profile", "/api/auth", "/api/items", "/api/items/search", "/api/items/type"
+                                , "/api/items/*/visibility", "/api/items/getHiddenItems", "api/items/likedItems/{id}",
+                                "/api/items/addLikedItems", "/api/items/removeSavedItem" ,"/api//items/isSaved",
+                                "/api/items/numberOfSavedItems", "/api/items/getUserPostedBy", "/api/items/**").permitAll()
                         .requestMatchers("/api/auth").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -55,7 +59,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173")); // Allow the frontend URL
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH" ,"DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // Allow credentials (cookies)
 

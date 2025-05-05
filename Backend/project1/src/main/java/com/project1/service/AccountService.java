@@ -34,7 +34,7 @@ public class AccountService {
 
     //logs in a user if the username and password combination are valid
     public Account login(String email, String rawPassword) {
-        Account account = accountRepository.findByEmail(email);
+        Account account = accountRepository.findByEmailIgnoreCase(email);
         if (account != null && passwordEncoder.matches(rawPassword, account.getPassword())) {
             return account;
         }
@@ -44,17 +44,8 @@ public class AccountService {
     //checks to see if a username is associated with an account or not
     //returns an account object of the account with the username if it exists, null otherwise
     public Account findByUsername(String username) {
-        if (accountRepository.findByEmail(username) != null) {
-            return accountRepository.findByEmail(username);
-        }
-        return null;
-    }
-
-    //checks to see if a password is associated with an account or not
-    //returns an account object of the account with the password if it exists, null otherwise
-    public Account findByPassword(String password) {
-        if (accountRepository.findByPassword(password) != null) {
-            return accountRepository.findByEmail(password);
+        if (accountRepository.findByEmailIgnoreCase(username) != null) {
+            return accountRepository.findByEmailIgnoreCase(username);
         }
         return null;
     }
@@ -66,6 +57,6 @@ public class AccountService {
             return null;
         } else {
             return accountRepository.findById(accountId);
-                }
+        }
     }
 }
